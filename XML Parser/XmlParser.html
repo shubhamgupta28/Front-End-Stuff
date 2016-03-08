@@ -1,0 +1,260 @@
+
+<!--
+	If the file has no stations but is still well-formed, should we still display a new window with the headers only?  @148
+	That is one more use case that we would test your program. You should alert an appropriate error message.
+	
+	append check
+	
+	links me location tag null
+-->
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+		<title>XML PARSER</title>
+		<!--
+			<BODY>
+			This is for USC disclaimer
+			</BODY>
+		-->
+		<script>
+			
+			function generateHTML(xmlDoc)
+			{  
+				ELEMENT_NODE = 1;    // MS parser doesn't define Node.ELEMENT_NODE
+				root=xmlDoc.DocumentElement;
+				html_text="<html><head><title>XML Parse Result Shubham</title></head><body>";
+				html_text+="<table border='2'>";
+				
+				//caption=xmlDoc.getElementsByTagName("title").item(0).firstChild.nodeValue;
+				//html_text+="<caption align='right'><h1>"+caption+"</h1></caption>"; //Heading, which is-> Airbus Aircraft Families
+				
+				//planes has  aircraft nodes , getElementsByTagName returns array 
+				planes=xmlDoc.getElementsByTagName("Header");
+				
+				//planesNodeLIst has all childnodes which include all aircraft nodes
+				
+				
+				html_text+="<tbody>";
+				
+				//Let's declare the Table headings
+				
+				x=0;  y=0;
+				// output the headers
+				for(i=0;i<planes.length;i++)
+				{  
+					planeNodeList = planes[i].childNodes;
+					html_text+="<tr>";
+					
+					for(j=0;j<planeNodeList.length;j++)
+					{
+						if(planeNodeList.item(j).nodeType==ELEMENT_NODE)
+						{  
+							header=planeNodeList[j].firstChild.nodeValue;
+							html_text+="<th>"+header+"</th>";
+						}
+					}   
+				}
+				html_text+="</tr>";
+				
+				
+				
+				
+				
+				planes=xmlDoc.getElementsByTagName("Row");
+				
+				x=250;y=100;
+				
+				if (planes.length == 0) {
+					alert("There are no Rows");
+					return null;
+				}
+				
+				else{
+					
+					// output out the values
+					for(i=0;i< planes.length;i++) //do for all planes
+					{  
+						
+						
+						planeNodeList=planes.item(i).childNodes; //get properties of a plane element(aircraft) by element
+						html_text+="<tr>";      //start a new row of the output table
+						
+						for(j=0;j<planeNodeList.length;j++)
+						{  
+							if( planeNodeList.item(j).nodeType==ELEMENT_NODE)
+							{
+								if(planeNodeList.item(j).nodeName=="Logo")
+								{
+									var myVar="";
+									if(planeNodeList.item(j).firstChild===null){
+										html_text+="<td>"+myVar+"</td>"
+									}
+									else{
+										//handle images separately
+										html_text+="<td><img src='"+planeNodeList.item(j).firstChild.nodeValue+"' width='"+x+"' height='"+y+"'></td>"; 
+									}
+								}
+								else if(planeNodeList.item(j).nodeName=="HomePage"){
+									var myVar="";
+									if(planeNodeList.item(j).firstChild===null){
+										html_text+="<td>"+myVar+"</td>"
+									}
+									else{
+										
+									html_text+="<td><a href='"+planeNodeList.item(j).firstChild.nodeValue+"' target='_blank'>"+ planeNodeList.item(j).firstChild.nodeValue+"</a></td>";	
+									}
+								}
+								else if(planeNodeList.item(j).nodeName=="Location"){
+									var myVar="";
+									if(planeNodeList.item(j).firstChild===null){
+										html_text+="<td>"+myVar+"</td>"
+									}
+									else
+									{
+										html_text+="<td>";
+										html_text+="<ul>";
+										cityChilds=planeNodeList.item(j).childNodes;
+										for(k=0;k<cityChilds.length;k++){
+											if( cityChilds.item(k).nodeType==ELEMENT_NODE)
+											{	
+												
+												if(cityChilds.item(k).firstChild===null){
+													html_text += "<li>";
+													html_text += "";
+													html_text += "</li>";
+												}
+												else{
+													html_text+="<li>";
+													html_text+=cityChilds.item(k).firstChild.nodeValue;
+													html_text+="</li>";
+												}
+												
+											}
+										}
+										html_text+="</ul>";
+										html_text+="</td>";
+									}
+								}
+								else 
+								{
+									var myVar="";
+									if(planeNodeList.item(j).firstChild===null){
+										html_text+="<td>"+myVar+"</td>"
+									}
+									else
+									{
+										html_text+="<td>"+planeNodeList.item(j).firstChild.nodeValue+"</td>";
+									}
+								}   
+							}    
+						}
+						html_text+="</tr>";  
+					}
+				}
+				html_text+="</tbody>";  html_text+="</table>";
+				html_text+="</body></html>";  
+				
+				hWin = window.open("", "Assignment4", "scrollbars=1,height=600,width=1050");
+				hWin.document.write(html_text); 
+				hWin.document.close();
+				
+				
+			}
+			
+			function viewXML(what)
+			{	
+				var URL = what.URL.value;
+				if(URL==''){
+					alert("Field Empty");
+				}
+				else
+				{
+					function loadXML(url) 
+					{
+						
+						
+						if (window.XMLHttpRequest)
+						{// code for IE7+, Firefox, Chrome, Opera, Safari
+							xmlhttp=new XMLHttpRequest();   
+						}
+						else if (window.ActiveXObject) {// code for IE6, IE5
+							xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");  
+						}
+						
+						
+						
+						xmlhttp.open("GET",url,false);
+						
+						xmlhttp.send();
+						if (xmlhttp.status==404) {
+							alert("URL doesn't exist!");
+							return;
+						}
+						xmlDoc=xmlhttp.responseXML;
+						return xmlDoc;   
+					}
+					xmlDoc = loadXML(URL);
+					
+					if (window.ActiveXObject) //if IE, simply execute script (due to async prop).
+					{  
+						if (xmlDoc.parseError.errorCode != 0) 
+						{
+							var myErr = xmlDoc.parseError;
+							generateError(xmlDoc);
+							hWin = window.open("", "Error", "scrollbars=1,height=300,width=340");
+							hWin.document.write(html_text);
+						} 
+						else 
+						{
+							generateHTML(xmlDoc);
+							hWin = window.open("", "Assignment4", "scrollbars=1,height=800,width=600");
+							hWin.document.write(html_text);   
+						}
+					}
+					
+					else //else if FF, execute script once XML object has loaded
+					{  
+						if(xmlDoc==null){
+							
+						}
+						else if(xmlDoc.documentElement.nodeName=="parsererror"){
+							alert("Error in XML File");
+						}
+						else{
+							xmlDoc.onload=generateHTML(xmlDoc);
+							//hWin = window.open("", "Assignment4", "scrollbars=1,height=600,width=1050");
+							//hWin.document.write(html_text); 
+							//hWin.document.close();
+						}
+					}	
+				}
+			}
+		</script>
+		<style type="text/css">
+		</style>
+	</head>
+	<body>
+		<center>
+			<div id="StayFocusd-infobar" style="display:none;">
+				<img src="chrome-extension://laankejkbhbdhmipfmgcngdelahlfoji/common/img/eye_19x19_red.png">
+				<span id="StayFocusd-infobar-msg"></span>
+				<span id="StayFocusd-infobar-links">
+					<a id="StayFocusd-infobar-never-show">hide forever</a>&nbsp;&nbsp;|&nbsp;&nbsp;
+					<a id="StayFocusd-infobar-hide">hide once</a>
+				</span>
+			</div>
+			
+			
+			Enter URL for Company List XML File 
+			<br><br>
+			<form name="myform" method="POST" id="location">
+				<input type="text" name="URL" maxlength="255" >
+				<br><br>
+				<input type="button" name="submit" value="Submit Query" onclick="viewXML(this.form)">
+			</form>
+		</center>
+		
+		
+	</NOSCRIPT>
+</body>
+</html>																																																				
